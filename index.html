@@ -246,15 +246,8 @@
         <hr style="border: 0; height: 1px; background: #ddd; margin: 40px 0;">
 
         <h2 class="gallery-title" id="galleryTitle">معرض الأعمال والمنتجات</h2>
-        <div class="gallery" id="imageGallery">
-            
-            <!-- تم وضع الصورة الأولى هنا برابط مباشر من المجلد للتغلب على حظر الهاتف الاستباقي -->
-            <div class="gallery-item">
-                <img src="./assets/img1.jpg" alt="SLIMANE HADJ BRAHIM - Work 1" onerror="this.src='assets/img1.jpg';">
-                <div class="caption" id="defaultCaption">منتج / قالب رقم 1</div>
-            </div>
-
-        </div>
+        <!-- تم تفريغ المعرض ليتم بناؤه بالكامل ديناميكياً بناءً على محتوى المجلد الفعلي -->
+        <div class="gallery" id="imageGallery"></div>
 
     </div>
 
@@ -354,7 +347,10 @@
             }
         };
 
+        let currentLang = 'ar';
+
         function changeLanguage(lang) {
+            currentLang = lang;
             const data = translations[lang];
             
             document.documentElement.lang = lang;
@@ -379,55 +375,69 @@
             document.getElementById('galleryTitle').innerText = data.galleryTitle;
             document.getElementById('footerText').innerText = data.footer;
 
-            document.getElementById('defaultCaption').innerText = `${data.captionText}1`;
-
+            // تحديث نصوص الصور المعروضة حالياً
             const captions = document.querySelectorAll('.gallery-item .caption');
             captions.forEach((caption, index) => {
                 caption.innerText = `${data.captionText}${index + 1}`;
             });
         }
 
-        // توليد باقي الصور ديناميكياً (من 2 إلى 50)
-        const totalImages = 50; 
-        const galleryContainer = document.getElementById('imageGallery');
-        const extensions = ['jpg', 'png', 'jpeg', 'webp', 'JPG', 'PNG', 'JPEG'];
-
-        for (let i = 2; i <= totalImages; i++) {
-            const item = document.createElement('div');
-            item.className = 'gallery-item';
-
-            const img = document.createElement('img');
-            img.alt = `SLIMANE HADJ BRAHIM - Work ${i}`;
+        // البرمجة الذكية: قراءة محتويات مجلد assets تلقائياً من جيتهاب
+        async function loadImagesDynamically() {
+            const galleryContainer = document.getElementById('imageGallery');
             
-            let extIndex = 0;
-            
-            function tryLoadImage() {
-                if (extIndex < extensions.length) {
-                    img.src = `./assets/img${i}.${extensions[extIndex]}`;
-                    extIndex++;
-                } else {
-                    item.style.display = 'none'; 
-                }
+            // استخراج اسم المستخدم واسم المستودع تلقائياً من رابط الموقع الحالي
+            const pathParts = window.location.pathname.split('/');
+            const repoName = pathParts[1] || "hadjbrahimslimane"; 
+            const userName = window.location.hostname.split('.')[0] || "Hadjibrahim11";
+
+            // الصيغ المدعومة للصور
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+
+            try {
+                // الاتصال بـ GitHub API لقراءة محتويات مجلد assets
+                const response = await fetch(`https://api.github.com/repos/${userName}/${repoName}/contents/assets`);
+                
+                if (!response.ok) throw new Error("تعذر قراءة المجلد");
+                
+                const files = await response.json();
+                let imageCount = 1;
+
+                files.forEach(file => {
+                    // التأكد من أن الملف عبارة عن صورة وليس ملف نصي
+                    const fileExt = file.name.split('.').pop().toLowerCase();
+                    if (imageExtensions.includes(fileExt)) {
+                        
+                        const item = document.createElement('div');
+                        item.className = 'gallery-item';
+
+                        const img = document.createElement('img');
+                        img.src = `./assets/${file.name}`; // استخدام مسار الصورة الفعلي مهما كان اسمها
+                        img.alt = `SLIMANE HADJ BRAHIM - ${file.name}`;
+
+                        const caption = document.createElement('div');
+                        caption.className = 'caption';
+                        caption.innerText = `${translations[currentLang].captionText}${imageCount}`;
+
+                        item.appendChild(img);
+                        item.appendChild(caption);
+                        galleryContainer.appendChild(item);
+                        
+                        imageCount++;
+                    }
+                });
+            } catch (error) {
+                console.log("الوضع المحلي أو حدث خطأ، سيتم إظهار رسالة أو تحميل افتراضي:", error);
+                // حل احتياطي إذا كنت تتصفح الملف داخل جهازك قبل رفعه لـ GitHub
+                galleryContainer.innerHTML = "<p style='text-align:center; width:100%; padding:20px;'>سيتم عرض الصور تلقائياً بمجرد رفع الموقع على GitHub Pages.</p>";
             }
-
-            img.onerror = function() {
-                // محاولة إضافية بدون النقاط للمسار البديل
-                img.src = `assets/img${i}.${extensions[extIndex-1]}`;
-                img.onerror = tryLoadImage;
-            };
-            
-            tryLoadImage();
-
-            const caption = document.createElement('div');
-            caption.className = 'caption';
-            caption.innerText = `${translations.ar.captionText}${i}`;
-
-            item.appendChild(img);
-            item.appendChild(caption);
-            galleryContainer.appendChild(item);
         }
 
-        changeLanguage('ar');
+        // تشغيل الدوال عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            changeLanguage('ar');
+            loadImagesDynamically();
+        });
     </script>
 
 </body>
