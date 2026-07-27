@@ -147,16 +147,51 @@
         }
 
         .gallery-title {
-            margin: 40px 0 20px;
+            margin: 40px 0 10px;
             text-align: center;
             color: var(--dark-color);
             font-size: 2rem;
         }
 
+        /* شريط التحكم في طريقة العرض */
+        .layout-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .layout-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--primary-color);
+            background-color: white;
+            color: var(--primary-color);
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .layout-btn.active, .layout-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* التحكم في شكل المعرض (افتراضياً Grid/Row) */
         .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .gallery.view-row {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        .gallery.view-column {
+            grid-template-columns: 1fr;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .gallery-item {
@@ -165,6 +200,13 @@
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* تنسيق حركة العناصر عند العرض كعمود */
+        .gallery.view-column .gallery-item {
+            flex-direction: column;
         }
 
         .gallery-item:hover {
@@ -172,12 +214,13 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
-        .gallery-item img {
+        .gallery-item img, .gallery-item video {
             width: 100%;
-            height: 240px;
+            height: 280px;
             object-fit: cover;
             display: block;
             background-color: #eaeaea;
+            border: none;
         }
 
         .gallery-item .caption {
@@ -187,6 +230,7 @@
             text-align: center;
             color: var(--dark-color);
             border-top: 1px solid #eee;
+            background-color: #fff;
         }
 
         footer {
@@ -246,8 +290,15 @@
         <hr style="border: 0; height: 1px; background: #ddd; margin: 40px 0;">
 
         <h2 class="gallery-title" id="galleryTitle">معرض الأعمال والمنتجات</h2>
-        <!-- تم تفريغ المعرض ليتم بناؤه بالكامل ديناميكياً بناءً على محتوى المجلد الفعلي -->
-        <div class="gallery" id="imageGallery"></div>
+        
+        <!-- أزرار التحكم في طريقة العرض -->
+        <div class="layout-controls">
+            <button id="btnRow" class="layout-btn active" onclick="changeLayout('row')">شبكة (Row)</button>
+            <button id="btnColumn" class="layout-btn" onclick="changeLayout('column')">عمودي (Column)</button>
+        </div>
+
+        <!-- المعرض يدعم الصور والفيديوهات ديناميكياً -->
+        <div class="gallery view-row" id="mediaGallery"></div>
 
     </div>
 
@@ -276,7 +327,9 @@
                 exp3: "تركيب القوالب وتغيير قطع القوالب وصيانتها.",
                 exp4: "استكشاف أخطاء التشغيل وحل مشاكل جودة المنتج.",
                 galleryTitle: "معرض الأعمال والمنتجات",
-                captionText: "منتج / قالب رقم ",
+                captionText: "عمل / منتج رقم ",
+                btnRow: "أفقياً / شبكة",
+                btnColumn: "عمودياً / قائمة",
                 footer: "جميع الحقوق محفوظة © SLIMANE HADJ BRAHIM - 2026"
             },
             fr: {
@@ -298,7 +351,9 @@
                 exp3: "Montage des moules et changement des pièces de moules.",
                 exp4: "Dépannage et résolution des défauts de production.",
                 galleryTitle: "Galerie de Travaux et Produits",
-                captionText: "Produit / Moule N° ",
+                captionText: "Projet / Produit N° ",
+                btnRow: "Grille (Row)",
+                btnColumn: "Liste (Column)",
                 footer: "Tous droits réservés © SLIMANE HADJ BRAHIM - 2026"
             },
             en: {
@@ -320,7 +375,9 @@
                 exp3: "Mold installation, changing mold components and maintenance.",
                 exp4: "Troubleshooting production process and solving product defects.",
                 galleryTitle: "Work & Products Gallery",
-                captionText: "Product / Mold No. ",
+                captionText: "Project / Product No. ",
+                btnRow: "Grid (Row)",
+                btnColumn: "List (Column)",
                 footer: "All Rights Reserved © SLIMANE HADJ BRAHIM - 2026"
             },
             zh: {
@@ -342,7 +399,9 @@
                 exp3: "模具安装、模具零件更换与日常维护。",
                 exp4: "生产制程排卡与解决产品质量缺陷故障。",
                 galleryTitle: "工作与产品展厅",
-                captionText: "产品 / 模具 编号 ",
+                captionText: "项目 / 产品 编号 ",
+                btnRow: "网格 (Row)",
+                btnColumn: "列表 (Column)",
                 footer: "版权所有 © SLIMANE HADJ BRAHIM - 2026"
             }
         };
@@ -373,72 +432,100 @@
             document.getElementById('exp3').innerText = data.exp3;
             document.getElementById('exp4').innerText = data.exp4;
             document.getElementById('galleryTitle').innerText = data.galleryTitle;
+            document.getElementById('btnRow').innerText = data.btnRow;
+            document.getElementById('btnColumn').innerText = data.btnColumn;
             document.getElementById('footerText').innerText = data.footer;
 
-            // تحديث نصوص الصور المعروضة حالياً
+            // تحديث نصوص التوضيح للميديا المعروضة
             const captions = document.querySelectorAll('.gallery-item .caption');
             captions.forEach((caption, index) => {
                 caption.innerText = `${data.captionText}${index + 1}`;
             });
         }
 
-        // البرمجة الذكية: قراءة محتويات مجلد assets تلقائياً من جيتهاب
-        async function loadImagesDynamically() {
-            const galleryContainer = document.getElementById('imageGallery');
+        // دالة التبديل بين الـ Column والـ Row
+        function changeLayout(type) {
+            const gallery = document.getElementById('mediaGallery');
+            const btnRow = document.getElementById('btnRow');
+            const btnColumn = document.getElementById('btnColumn');
+
+            if (type === 'row') {
+                gallery.classList.remove('view-column');
+                gallery.classList.add('view-row');
+                btnRow.classList.add('active');
+                btnColumn.classList.remove('active');
+            } else {
+                gallery.classList.remove('view-row');
+                gallery.classList.add('view-column');
+                btnColumn.classList.add('active');
+                btnRow.classList.remove('active');
+            }
+        }
+
+        // البرمجة الذكية: قراءة محتويات مجلد assets تلقائياً ودعم الصور والفيديوهات
+        async function loadMediaDynamically() {
+            const galleryContainer = document.getElementById('mediaGallery');
             
-            // استخراج اسم المستخدم واسم المستودع تلقائياً من رابط الموقع الحالي
             const pathParts = window.location.pathname.split('/');
             const repoName = pathParts[1] || "hadjbrahimslimane"; 
             const userName = window.location.hostname.split('.')[0] || "Hadjibrahim11";
 
-            // الصيغ المدعومة للصور
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+            const videoExtensions = ['mp4', 'webm', 'ogg']; // امتدادات الفيديو المدعومة
 
             try {
-                // الاتصال بـ GitHub API لقراءة محتويات مجلد assets
                 const response = await fetch(`https://api.github.com/repos/${userName}/${repoName}/contents/assets`);
                 
                 if (!response.ok) throw new Error("تعذر قراءة المجلد");
                 
                 const files = await response.json();
-                let imageCount = 1;
+                let mediaCount = 1;
 
                 files.forEach(file => {
-                    // التأكد من أن الملف عبارة عن صورة وليس ملف نصي
                     const fileExt = file.name.split('.').pop().toLowerCase();
+                    let mediaElement = null;
+
+                    // التحقق إذا كان الملف صورة
                     if (imageExtensions.includes(fileExt)) {
-                        
+                        mediaElement = document.createElement('img');
+                        mediaElement.src = `./assets/${file.name}`;
+                        mediaElement.alt = `SLIMANE HADJ BRAHIM - ${file.name}`;
+                    } 
+                    // التحقق إذا كان الملف فيديو
+                    else if (videoExtensions.includes(fileExt)) {
+                        mediaElement = document.createElement('video');
+                        mediaElement.src = `./assets/${file.name}`;
+                        mediaElement.controls = true; // إظهار أزرار التحكم بالفيديو (تشغيل، إيقاف، صوت)
+                        mediaElement.preload = "metadata";
+                    }
+
+                    // إذا تم التعرف على الملف كصورة أو فيديو يتم إضافته للمعرض
+                    if (mediaElement) {
                         const item = document.createElement('div');
                         item.className = 'gallery-item';
 
-                        const img = document.createElement('img');
-                        img.src = `./assets/${file.name}`; // استخدام مسار الصورة الفعلي مهما كان اسمها
-                        img.alt = `SLIMANE HADJ BRAHIM - ${file.name}`;
-
                         const caption = document.createElement('div');
                         caption.className = 'caption';
-                        caption.innerText = `${translations[currentLang].captionText}${imageCount}`;
+                        caption.innerText = `${translations[currentLang].captionText}${mediaCount}`;
 
-                        item.appendChild(img);
+                        item.appendChild(mediaElement);
                         item.appendChild(caption);
                         galleryContainer.appendChild(item);
                         
-                        imageCount++;
+                        mediaCount++;
                     }
                 });
             } catch (error) {
-                console.log("الوضع المحلي أو حدث خطأ، سيتم إظهار رسالة أو تحميل افتراضي:", error);
-                // حل احتياطي إذا كنت تتصفح الملف داخل جهازك قبل رفعه لـ GitHub
-                galleryContainer.innerHTML = "<p style='text-align:center; width:100%; padding:20px;'>سيتم عرض الصور تلقائياً بمجرد رفع الموقع على GitHub Pages.</p>";
+                console.log("الوضع المحلي أو حدث خطأ:", error);
+                galleryContainer.innerHTML = "<p style='text-align:center; width:100%; padding:20px;'>سيتم عرض الصور والفيديوهات تلقائياً بمجرد رفع الموقع ومجلد assets على GitHub Pages.</p>";
             }
         }
 
-        // تشغيل الدوال عند تحميل الصفحة
         window.addEventListener('DOMContentLoaded', () => {
             changeLanguage('ar');
-            loadImagesDynamically();
+            loadMediaDynamically();
         });
     </script>
 
 </body>
-</html>
+    </html>
