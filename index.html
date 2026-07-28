@@ -153,7 +153,6 @@
             font-size: 2rem;
         }
 
-        /* شريط التحكم في طريقة العرض */
         .layout-controls {
             display: flex;
             justify-content: center;
@@ -177,7 +176,7 @@
             color: white;
         }
 
-        /* إصلاح وتطوير المعرض ليدعم التحويل بسلاسة */
+        /* تنسيق المعرض وإصلاح الـ Row والـ Column */
         .gallery {
             display: grid;
             gap: 20px;
@@ -185,12 +184,10 @@
             transition: all 0.3s ease;
         }
 
-        /* نمط الشبكة الأفقية - Row */
         .gallery.view-row {
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         }
 
-        /* نمط العرض العمودي القائمة - Column */
         .gallery.view-column {
             grid-template-columns: 1fr;
             max-width: 700px;
@@ -222,7 +219,6 @@
             border: none;
         }
 
-        /* تحسين مظهر الفيديو وعناصر التحكم عند العرض العمودي */
         .gallery.view-column .gallery-item video,
         .gallery.view-column .gallery-item img {
             height: auto;
@@ -297,13 +293,11 @@
 
         <h2 class="gallery-title" id="galleryTitle">معرض الأعمال والمنتجات</h2>
         
-        <!-- أزرار التحكم في طريقة العرض -->
         <div class="layout-controls">
             <button id="btnRow" class="layout-btn active" onclick="changeLayout('row')">شبكة (Row)</button>
             <button id="btnColumn" class="layout-btn" onclick="changeLayout('column')">عمودي (Column)</button>
         </div>
 
-        <!-- المعرض يدعم الصور والفيديوهات ديناميكياً -->
         <div class="gallery view-row" id="mediaGallery"></div>
 
     </div>
@@ -442,14 +436,12 @@
             document.getElementById('btnColumn').innerText = data.btnColumn;
             document.getElementById('footerText').innerText = data.footer;
 
-            // تحديث نصوص التوضيح للميديا المعروضة
             const captions = document.querySelectorAll('.gallery-item .caption');
             captions.forEach((caption, index) => {
                 caption.innerText = `${data.captionText}${index + 1}`;
             });
         }
 
-        // دالة التبديل بين الـ Column والـ Row مع تحديث كلاسات الأزرار
         function changeLayout(type) {
             const gallery = document.getElementById('mediaGallery');
             const btnRow = document.getElementById('btnRow');
@@ -468,7 +460,7 @@
             }
         }
 
-        // دالة عرض الميديا وتدعم جلب البيانات من GitHub أو المسار المحلي
+        // دالة جلب وعرض الميديا
         async function loadMediaDynamically() {
             const galleryContainer = document.getElementById('mediaGallery');
             
@@ -479,51 +471,64 @@
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
             const videoExtensions = ['mp4', 'webm', 'ogg'];
 
-            // مصفوفة احتياطية لعرض الملفات محلياً في حال تعذر الاتصال بـ GitHub API
+            // 🛠️ هام جداً: ضع هنا الأسماء الحقيقية لملفاتك الموجودة في مجلد assets لتعمل على جهازك فوراً!
+            // يمكنك إضافة أي عدد تريده من الصور أو الفيديوهات بنفس الطريقة
             const localFallbackFiles = [
-                { name: 'video1.mp4' },
-                { name: 'image1.jpg' },
-                { name: 'video2.webm' },
-                { name: 'image2.png' }
+                { name: 'video1.mp4', isLocal: true },
+                { name: 'image1.jpg', isLocal: true },
+                { name: 'video2.mp4', isLocal: true },
+                { name: 'image2.png', isLocal: true }
             ];
 
             try {
-                // محاولة جلب الملفات من مستودع GitHub
+                // محاولة القراءة من المستودع المرفوع على جيت هاب
                 const response = await fetch(`https://api.github.com/repos/${userName}/${repoName}/contents/assets`);
-                if (!response.ok) throw new Error("تعذر قراءة مجلد GitHub - جاري التبديل للمسار المحلي");
+                if (!response.ok) throw new Error("بيئة تشغيل محلية");
                 
                 const files = await response.json();
-                renderItems(files);
+                renderItems(files, false);
 
             } catch (error) {
-                console.log(error.message);
-                // إذا كنا نعمل محلياً، نستخدم المصفوفة المحلية المباشرة من مجلد assets
-                renderItems(localFallbackFiles);
+                console.log("جاري العرض من ملفات المجلد المحلي المباشر...");
+                // التشغيل من جهازك محلياً
+                renderItems(localFallbackFiles, true);
             }
 
-            function renderItems(filesList) {
-                galleryContainer.innerHTML = ""; // تنظيف المعرض قبل الإضافة
+            function renderItems(filesList, isLocalMode) {
+                galleryContainer.innerHTML = ""; 
                 let mediaCount = 1;
 
                 filesList.forEach(file => {
                     const fileExt = file.name.split('.').pop().toLowerCase();
                     let mediaElement = null;
 
-                    // التحقق إذا كان الملف صورة
+                    // تحديد مسار الملف: إذا كنا محلياً نأخذ من مجلد assets، أو المجلد الأصلي
+                    // الكود يدعم المجلدين لتجنب أي مشكلة في التوجيه المحلي
+                    let possiblePaths = [`./assets/${file.name}`, `./${file.name}`];
+                    let chosenSrc = possiblePaths[0]; 
+
                     if (imageExtensions.includes(fileExt)) {
                         mediaElement = document.createElement('img');
-                        mediaElement.src = `./assets/${file.name}`;
                         mediaElement.alt = `SLIMANE HADJ BRAHIM - ${file.name}`;
                     } 
-                    // التحقق إذا كان الملف فيديو
                     else if (videoExtensions.includes(fileExt)) {
                         mediaElement = document.createElement('video');
-                        mediaElement.src = `./assets/${file.name}`;
                         mediaElement.controls = true;
                         mediaElement.preload = "metadata";
                     }
 
                     if (mediaElement) {
+                        mediaElement.src = chosenSrc;
+
+                        // طريقة ذكية: إذا لم يجد الملف داخل مجلد assets، يبحث عنه في المجلد الأصلي مباشرة
+                        if(isLocalMode) {
+                            mediaElement.onerror = function() {
+                                if(this.src.includes('/assets/')) {
+                                    this.src = `./${file.name}`; 
+                                }
+                            };
+                        }
+
                         const item = document.createElement('div');
                         item.className = 'gallery-item';
 
@@ -532,12 +537,4 @@
                         caption.innerText = `${translations[currentLang].captionText}${mediaCount}`;
 
                         item.appendChild(mediaElement);
-                        item.appendChild(caption);
-                        galleryContainer.appendChild(item);
-                        
-                        mediaCount++;
-                    }
-                });
-
-                if(mediaCount === 1) {
-          
+                        item.appendCh
