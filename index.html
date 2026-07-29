@@ -453,7 +453,7 @@
             const data = await getFolder(path);
             for(const item of data){
                 if(item.type === "dir"){
-                    if(item.path === "assets") continue; 
+                    // تم حذف سطر تخطي المجلد assets لكي يقوم الكود بالدخول إليه وقراءة محتوياته
                     const sub = await scan(item.path);
                     files = files.concat(sub);
                 } else {
@@ -488,7 +488,9 @@
                 type = "video";
                 media = document.createElement("video");
                 media.src = file.download_url;
-                media.autoplay = true;
+                // تم إيقاف التشغيل التلقائي المزعج وترك الخيار للمستخدم عند فتح الـ Lightbox
+                media.autoplay = false;
+                media.controls = false; 
                 media.loop = true;
                 media.muted = true;
                 media.playsInline = true;
