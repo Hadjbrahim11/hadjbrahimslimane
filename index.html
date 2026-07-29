@@ -147,51 +147,16 @@
         }
 
         .gallery-title {
-            margin: 40px 0 10px;
+            margin: 40px 0 20px;
             text-align: center;
             color: var(--dark-color);
             font-size: 2rem;
         }
 
-        .layout-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        .layout-btn {
-            padding: 8px 16px;
-            border: 2px solid var(--primary-color);
-            background-color: white;
-            color: var(--primary-color);
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .layout-btn.active, .layout-btn:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        /* تنسيق المعرض وإصلاح الـ Row والـ Column */
         .gallery {
             display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-
-        .gallery.view-row {
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        }
-
-        .gallery.view-column {
-            grid-template-columns: 1fr;
-            max-width: 700px;
-            margin: 0 auto;
         }
 
         .gallery-item {
@@ -200,9 +165,6 @@
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
         }
 
         .gallery-item:hover {
@@ -212,17 +174,11 @@
 
         .gallery-item img, .gallery-item video {
             width: 100%;
-            height: 300px;
+            height: 240px;
             object-fit: cover;
             display: block;
             background-color: #eaeaea;
-            border: none;
-        }
-
-        .gallery.view-column .gallery-item video,
-        .gallery.view-column .gallery-item img {
-            height: auto;
-            max-height: 450px;
+            cursor: pointer;
         }
 
         .gallery-item .caption {
@@ -232,7 +188,35 @@
             text-align: center;
             color: var(--dark-color);
             border-top: 1px solid #eee;
-            background-color: #fff;
+        }
+
+        /* استايل النافذة المنبثقة Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 85%;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
         }
 
         footer {
@@ -293,13 +277,14 @@
 
         <h2 class="gallery-title" id="galleryTitle">معرض الأعمال والمنتجات</h2>
         
-        <div class="layout-controls">
-            <button id="btnRow" class="layout-btn active" onclick="changeLayout('row')">شبكة (Row)</button>
-            <button id="btnColumn" class="layout-btn" onclick="changeLayout('column')">عمودي (Column)</button>
-        </div>
+        <div class="gallery" id="imageGallery"></div>
 
-        <div class="gallery view-row" id="mediaGallery"></div>
+    </div>
 
+    <!-- حاوية الـ Lightbox -->
+    <div id="mediaLightbox" class="lightbox" onclick="closeLightbox()">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <div id="lightboxTarget"></div>
     </div>
 
     <footer>
@@ -307,6 +292,9 @@
     </footer>
 
     <script>
+        //========================
+        // الترجمات
+        //========================
         const translations = {
             ar: {
                 dir: "rtl",
@@ -327,16 +315,14 @@
                 exp3: "تركيب القوالب وتغيير قطع القوالب وصيانتها.",
                 exp4: "استكشاف أخطاء التشغيل وحل مشاكل جودة المنتج.",
                 galleryTitle: "معرض الأعمال والمنتجات",
-                captionText: "عمل / منتج رقم ",
-                btnRow: "شبكة (Row)",
-                btnColumn: "عمودي (Column)",
+                captionText: "عمل رقم ",
                 footer: "جميع الحقوق محفوظة © SLIMANE HADJ BRAHIM - 2026"
             },
             fr: {
                 dir: "ltr",
                 title: "Ingénieur / Technicien en Injection Plastique & Robotique",
                 phone: "Tél:",
-                cardPersonal: "Informations Personnelles",
+                cardPersonal: "Informations Personnel",
                 country: "Pays:",
                 countryVal: "Algérie",
                 city: "Ville / Commune:",
@@ -351,9 +337,7 @@
                 exp3: "Montage des moules et changement des pièces de moules.",
                 exp4: "Dépannage et résolution des défauts de production.",
                 galleryTitle: "Galerie de Travaux et Produits",
-                captionText: "Projet / Produit N° ",
-                btnRow: "Grille (Row)",
-                btnColumn: "Liste (Column)",
+                captionText: "Projet N° ",
                 footer: "Tous droits réservés © SLIMANE HADJ BRAHIM - 2026"
             },
             en: {
@@ -375,9 +359,7 @@
                 exp3: "Mold installation, changing mold components and maintenance.",
                 exp4: "Troubleshooting production process and solving product defects.",
                 galleryTitle: "Work & Products Gallery",
-                captionText: "Project / Product No. ",
-                btnRow: "Grid (Row)",
-                btnColumn: "List (Column)",
+                captionText: "Work No. ",
                 footer: "All Rights Reserved © SLIMANE HADJ BRAHIM - 2026"
             },
             zh: {
@@ -399,14 +381,12 @@
                 exp3: "模具安装、模具零件更换与日常维护。",
                 exp4: "生产制程排卡与解决产品质量缺陷故障。",
                 galleryTitle: "工作与产品展厅",
-                captionText: "项目 / 产品 编号 ",
-                btnRow: "网格 (Row)",
-                btnColumn: "列表 (Column)",
+                captionText: "项目 编号 ",
                 footer: "版权所有 © SLIMANE HADJ BRAHIM - 2026"
             }
         };
 
-        let currentLang = 'ar';
+        let currentLang = "ar";
 
         function changeLanguage(lang) {
             currentLang = lang;
@@ -432,109 +412,214 @@
             document.getElementById('exp3').innerText = data.exp3;
             document.getElementById('exp4').innerText = data.exp4;
             document.getElementById('galleryTitle').innerText = data.galleryTitle;
-            document.getElementById('btnRow').innerText = data.btnRow;
-            document.getElementById('btnColumn').innerText = data.btnColumn;
             document.getElementById('footerText').innerText = data.footer;
 
+            updateCaptions();
+        }
+
+        function updateCaptions() {
+            const data = translations[currentLang];
             const captions = document.querySelectorAll('.gallery-item .caption');
             captions.forEach((caption, index) => {
                 caption.innerText = `${data.captionText}${index + 1}`;
             });
         }
 
-        function changeLayout(type) {
-            const gallery = document.getElementById('mediaGallery');
-            const btnRow = document.getElementById('btnRow');
-            const btnColumn = document.getElementById('btnColumn');
+        //========================
+        // GitHub Gallery
+        //========================
+        const USER = "Hadjbrahim11";
+        const REPO = "hadjbrahimslimane";
+        const BRANCH = "main";
 
-            if (type === 'row') {
-                gallery.classList.remove('view-column');
-                gallery.classList.add('view-row');
-                btnRow.classList.add('active');
-                btnColumn.classList.remove('active');
-            } else {
-                gallery.classList.remove('view-row');
-                gallery.classList.add('view-column');
-                btnColumn.classList.add('active');
-                btnRow.classList.remove('active');
-            }
+        const gallery = document.getElementById("imageGallery");
+
+        const imageExt = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "avif"];
+        const videoExt = ["mp4", "webm", "ogg", "mov", "m4v", "avi", "mkv"];
+
+        let allMedia = [];
+        let currentIndex = 0;
+        const ITEMS_PER_LOAD = 10;
+
+        async function getFolder(path=""){
+            const url = `https://api.github.com/repos/${USER}/${REPO}/contents/${path}?ref=${BRANCH}`;
+            const response = await fetch(url);
+            if(!response.ok) return [];
+            return await response.json();
         }
 
-        // دالة جلب وعرض الميديا
-        async function loadMediaDynamically() {
-            const galleryContainer = document.getElementById('mediaGallery');
-            
-            const pathParts = window.location.pathname.split('/');
-            const repoName = pathParts[1] || "hadjbrahimslimane"; 
-            const userName = window.location.hostname.split('.')[0] || "Hadjibrahim11";
+        async function scan(path=""){
+            let files = [];
+            const data = await getFolder(path);
+            for(const item of data){
+                if(item.type === "dir"){
+                    if(item.path === "assets") continue; 
+                    const sub = await scan(item.path);
+                    files = files.concat(sub);
+                } else {
+                    files.push(item);
+                }
+            }
+            return files;
+        }
 
-            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
-            const videoExtensions = ['mp4', 'webm', 'ogg'];
+        function isImage(name){
+            const ext = name.split(".").pop().toLowerCase();
+            return imageExt.includes(ext);
+        }
 
-            // 🛠️ هام جداً: ضع هنا الأسماء الحقيقية لملفاتك الموجودة في مجلد assets لتعمل على جهازك فوراً!
-            // يمكنك إضافة أي عدد تريده من الصور أو الفيديوهات بنفس الطريقة
-            const localFallbackFiles = [
-                { name: 'video1.mp4', isLocal: true },
-                { name: 'image1.jpg', isLocal: true },
-                { name: 'video2.mp4', isLocal: true },
-                { name: 'image2.png', isLocal: true }
-            ];
+        function isVideo(name){
+            const ext = name.split(".").pop().toLowerCase();
+            return videoExt.includes(ext);
+        }
 
-            try {
-                // محاولة القراءة من المستودع المرفوع على جيت هاب
-                const response = await fetch(`https://api.github.com/repos/${userName}/${repoName}/contents/assets`);
-                if (!response.ok) throw new Error("بيئة تشغيل محلية");
-                
-                const files = await response.json();
-                renderItems(files, false);
+        function createItem(file){
+            let media;
+            let type;
 
-            } catch (error) {
-                console.log("جاري العرض من ملفات المجلد المحلي المباشر...");
-                // التشغيل من جهازك محلياً
-                renderItems(localFallbackFiles, true);
+            if(isImage(file.name)){
+                type = "image";
+                media = document.createElement("img");
+                media.src = file.download_url;
+                media.loading = "lazy";
+                media.decoding = "async";
+            }
+            else if(isVideo(file.name)){
+                type = "video";
+                media = document.createElement("video");
+                media.src = file.download_url;
+                media.autoplay = true;
+                media.loop = true;
+                media.muted = true;
+                media.playsInline = true;
+                media.preload = "metadata";
+            }
+            else {
+                return;
             }
 
-            function renderItems(filesList, isLocalMode) {
-                galleryContainer.innerHTML = ""; 
-                let mediaCount = 1;
+            const item = document.createElement("div");
+            item.className = "gallery-item";
 
-                filesList.forEach(file => {
-                    const fileExt = file.name.split('.').pop().toLowerCase();
-                    let mediaElement = null;
+            media.onclick = function(){
+                openLightbox(file.download_url, type);
+            };
 
-                    // تحديد مسار الملف: إذا كنا محلياً نأخذ من مجلد assets، أو المجلد الأصلي
-                    // الكود يدعم المجلدين لتجنب أي مشكلة في التوجيه المحلي
-                    let possiblePaths = [`./assets/${file.name}`, `./${file.name}`];
-                    let chosenSrc = possiblePaths[0]; 
+            const caption = document.createElement("div");
+            caption.className = "caption";
 
-                    if (imageExtensions.includes(fileExt)) {
-                        mediaElement = document.createElement('img');
-                        mediaElement.alt = `SLIMANE HADJ BRAHIM - ${file.name}`;
-                    } 
-                    else if (videoExtensions.includes(fileExt)) {
-                        mediaElement = document.createElement('video');
-                        mediaElement.controls = true;
-                        mediaElement.preload = "metadata";
-                    }
+            item.appendChild(media);
+            item.appendChild(caption);
+            gallery.appendChild(item);
+        }
 
-                    if (mediaElement) {
-                        mediaElement.src = chosenSrc;
+        function loadMore(){
+            if(currentIndex >= allMedia.length) return;
 
-                        // طريقة ذكية: إذا لم يجد الملف داخل مجلد assets، يبحث عنه في المجلد الأصلي مباشرة
-                        if(isLocalMode) {
-                            mediaElement.onerror = function() {
-                                if(this.src.includes('/assets/')) {
-                                    this.src = `./${file.name}`; 
-                                }
-                            };
-                        }
+            const end = Math.min(currentIndex + ITEMS_PER_LOAD, allMedia.length);
 
-                        const item = document.createElement('div');
-                        item.className = 'gallery-item';
+            for(let i = currentIndex; i < end; i++){
+                createItem(allMedia[i]);
+            }
 
-                        const caption = document.createElement('div');
-                        caption.className = 'caption';
-                        caption.innerText = `${translations[currentLang].captionText}${mediaCount}`;
+            currentIndex = end;
+            updateCaptions();
+        }
 
-                        item.appendChild(mediaElement);
-                        item.appendCh
+        async function loadGallery(){
+            gallery.innerHTML = "";
+
+            allMedia = await scan("");
+            allMedia = allMedia.filter(file => isImage(file.name) || isVideo(file.name));
+
+            allMedia.sort((a,b)=>{
+                if(isImage(a.name) && isVideo(b.name)) return -1;
+                if(isVideo(a.name) && isImage(b.name)) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            currentIndex = 0;
+            loadMore();
+        }
+
+        //========================
+        // أحداث التمرير والتغيير وإدارة حالة الصفحة
+        //========================
+        window.addEventListener("scroll",()=>{
+            if(
+                window.innerHeight + window.scrollY >=
+                document.documentElement.scrollHeight - 300
+            ){
+                loadMore();
+            }
+        });
+
+        window.addEventListener("resize",()=>{
+            if(
+                window.innerHeight + window.scrollY >=
+                document.documentElement.scrollHeight - 300
+            ){
+                loadMore();
+            }
+        });
+
+        window.addEventListener("DOMContentLoaded",async()=>{
+            try{
+                gallery.innerHTML=
+                "<div style='text-align:center;padding:30px;font-size:18px;grid-column:1/-1;color:#777;'>Loading...</div>";
+
+                // تعيين اللغة التلقائية عند بدء التحميل
+                changeLanguage('ar');
+                
+                await loadGallery();
+
+                if(allMedia.length===0){
+                    gallery.innerHTML=
+                    "<div style='text-align:center;padding:30px;grid-column:1/-1;color:#777;'>No images or videos found.</div>";
+                }
+            }catch(error){
+                console.error(error);
+                gallery.innerHTML=
+                "<div style='text-align:center;padding:30px;color:red;grid-column:1/-1;'>Error loading gallery.</div>";
+            }
+        });
+
+        //========================
+        // وظائف الـ Lightbox
+        //========================
+        function openLightbox(url, type) {
+            const lightbox = document.getElementById("mediaLightbox");
+            const target = document.getElementById("lightboxTarget");
+            target.innerHTML = ""; 
+
+            if (type === "image") {
+                const img = document.createElement("img");
+                img.src = url;
+                img.className = "lightbox-content";
+                target.appendChild(img);
+            } else if (type === "video") {
+                const video = document.createElement("video");
+                video.src = url;
+                video.className = "lightbox-content";
+                video.controls = true;
+                video.autoplay = true;
+                target.appendChild(video);
+            }
+
+            lightbox.style.display = "flex";
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById("mediaLightbox");
+            const target = document.getElementById("lightboxTarget");
+            lightbox.style.display = "none";
+            target.innerHTML = ""; 
+        }
+
+        document.getElementById("lightboxTarget").addEventListener("click", function(e) {
+            e.stopPropagation();
+        });
+    </script>
+
+</body>
+</html>
